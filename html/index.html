@@ -30,7 +30,7 @@
 
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css?family=Caveat:700|Poppins:400,500,600,700" rel="stylesheet">
+    <link href="assets/fonts/fonts.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
     <script src="bundle.js"></script>
     <!-- Updated 1533336779 -->
@@ -307,8 +307,21 @@
 </footer>
 <p id="input__media__activate" class="input__media__activate"></p>
 </div>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-107306747-1"></script>
-<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)}; gtag('js', new Date()); gtag('config', 'UA-107306747-1'); </script>
+<script>
+// Lightweight, pluggable analytics dispatcher (replaces Google Analytics).
+// No external request and no tracking by default, so the app works offline.
+// The existing gtag('event', name, params) call sites stay unchanged.
+// To wire up tracking later, register one or more handlers:
+//   window.analyticsHandlers.push(function (type, name, params) { ... });
+// Each handler receives the same arguments passed to gtag().
+window.analyticsHandlers = window.analyticsHandlers || [];
+window.gtag = function () {
+    var args = arguments;
+    window.analyticsHandlers.forEach(function (handler) {
+        try { handler.apply(null, args); } catch (e) { /* never let analytics break the app */ }
+    });
+};
+</script>
 <script type="text/javascript">
 
     function getAndroidVersion() {

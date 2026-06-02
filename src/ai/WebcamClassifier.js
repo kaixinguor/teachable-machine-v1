@@ -14,6 +14,7 @@
 
 /* eslint-disable camelcase, max-lines,  */
 const IMAGE_SIZE = 227;
+const MOBILENET_MODEL_PATH = 'models/mobilenet/model.json';
 const INPUT_SIZE = 1000;
 const TOPK = 10;
 const CLASS_COUNT = 3;
@@ -127,8 +128,11 @@ export default class WebcamClassifier {
     tf.ENV.set('WEBGL_DOWNLOAD_FLOAT_ENABLED', false);
     this.classifier = knnClassifier.create();
 
-    // Load mobilenet.
-    this.mobilenetModule = await mobilenet.load();
+    // Load mobilenet from a locally hosted copy of the weights (served from
+    // /models/mobilenet) so the app works offline and saves bandwidth.
+    this.mobilenetModule = new mobilenet.MobileNet(1, 1.0);
+    this.mobilenetModule.path = MOBILENET_MODEL_PATH;
+    await this.mobilenetModule.load();
   }
 
   /**
