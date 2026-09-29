@@ -63,6 +63,27 @@ function init() {
 	}
 }
 
-window.addEventListener('load', init);
+// Third-party embeds are attached only once the document has finished
+// loading. Keeping them out of the initial load matters because tfjs
+// refuses to read pixels from a video until document.readyState is
+// 'complete', and an unreachable embed would otherwise block that forever.
+function attachDeferredEmbeds() {
+	document.querySelectorAll('iframe[data-src]').forEach((iframe) => {
+		iframe.src = iframe.getAttribute('data-src');
+		iframe.removeAttribute('data-src');
+	});
+}
+
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', init);
+}else {
+	init();
+}
+
+if (document.readyState === 'complete') {
+	attachDeferredEmbeds();
+}else {
+	window.addEventListener('load', attachDeferredEmbeds);
+}
 
 export default GLOBALS;

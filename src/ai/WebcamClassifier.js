@@ -127,8 +127,16 @@ export default class WebcamClassifier {
     tf.ENV.set('WEBGL_DOWNLOAD_FLOAT_ENABLED', false);
     this.classifier = knnClassifier.create();
 
-    // Load mobilenet.
-    this.mobilenetModule = await mobilenet.load();
+    // Load mobilenet. It is several megabytes, so on a slow connection this
+    // can take tens of seconds; flag the state so the UI can say so instead
+    // of leaving the train buttons looking broken.
+    document.body.classList.add('model-loading');
+    try {
+      this.mobilenetModule = await mobilenet.load();
+    }catch (error) {
+      console.error('Teachable Machine: could not load the MobileNet model', error);
+    }
+    document.body.classList.remove('model-loading');
   }
 
   /**
@@ -274,6 +282,28 @@ export default class WebcamClassifier {
   }
 
   async animate() {
+    try {
+      await this.animateFrame();
+    }catch (error) {
+      // A single bad frame must never kill the render loop, otherwise
+      // capturing stops for good after the very first error.
+      if (!this.frameErrorLogged) {
+        this.frameErrorLogged = true;
+        console.error('Teachable Machine: skipping frame after error', error);
+      }
+    }
+
+    this.timer = requestAnimationFrame(this.animate.bind(this));
+  }
+
+  async animateFrame() {
+    // The model is fetched asynchronously; until it resolves there is
+    // nothing to train or predict with, so idle instead of throwing
+    // (and instead of counting examples we cannot actually learn from).
+    if (!this.mobilenetModule) {
+      return;
+    }
+
     // Get image data from video element
     const image = this.video;
     const exampleCount = Object.keys(this.classifier.getClassExampleCount()).length;
@@ -337,8 +367,6 @@ export default class WebcamClassifier {
         image.dispose();
       }
     }
-
-    this.timer = requestAnimationFrame(this.animate.bind(this));
   }
 }
 /* eslint-disable keyword-spacing */
